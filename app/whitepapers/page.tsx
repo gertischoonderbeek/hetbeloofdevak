@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
+import EmailGate from "@/app/components/EmailGate";
 
 interface Whitepaper {
   id: string;
@@ -23,10 +24,6 @@ export default function WhitepapersPage() {
   const [error, setError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [selectedWhitepaper, setSelectedWhitepaper] = useState<Whitepaper | null>(null);
-  const [naam, setNaam] = useState("");
-  const [email, setEmail] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const [modalError, setModalError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchWhitepapers = async () => {
@@ -55,7 +52,8 @@ export default function WhitepapersPage() {
         console.error("Error fetching whitepapers:", fetchError);
         setError("Fout bij ophalen van whitepapers: " + fetchError.message);
       } else {
-        setWhitepapers(data || []);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        setWhitepapers((data as any) || []);
       }
 
       setLoading(false);
@@ -76,56 +74,11 @@ export default function WhitepapersPage() {
   const handleDownloadClick = (whitepaper: Whitepaper) => {
     setSelectedWhitepaper(whitepaper);
     setShowModal(true);
-    setModalError(null);
-    setNaam("");
-    setEmail("");
   };
 
   const handleCloseModal = () => {
     setShowModal(false);
     setSelectedWhitepaper(null);
-    setNaam("");
-    setEmail("");
-    setModalError(null);
-  };
-
-  const handleModalSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedWhitepaper) return;
-
-    setSubmitting(true);
-    setModalError(null);
-
-    try {
-      // Sla download record op in database
-      const { error: insertError } = await supabase
-        .from("downloads")
-        .insert([
-          {
-            whitepaper_id: selectedWhitepaper.id,
-            naam: naam,
-            email: email,
-            aangemeld_op: new Date().toISOString(),
-          },
-        ]);
-
-      if (insertError) {
-        console.error("Error saving download record:", insertError);
-        setModalError("Fout bij opslaan: " + insertError.message);
-        setSubmitting(false);
-        return;
-      }
-
-      // Sluit modal
-      handleCloseModal();
-
-      // Trigger PDF download
-      window.open(selectedWhitepaper.pdf_url, "_blank");
-    } catch (error) {
-      console.error("Unexpected error:", error);
-      setModalError("Er is een onverwachte fout opgetreden.");
-      setSubmitting(false);
-    }
   };
 
   return (
@@ -286,97 +239,9 @@ export default function WhitepapersPage() {
         </div>
       </section>
 
-      {/* Download Modal */}
+      {/* E-mail gate */}
       {showModal && selectedWhitepaper && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-8 relative">
-            {/* Close Button */}
-            <button
-              onClick={handleCloseModal}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
-              aria-label="Sluiten"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-
-            {/* Modal Header */}
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold text-[#1B3F6E] mb-2">
-                Download Whitepaper
-              </h2>
-              <p className="text-gray-600 text-sm">
-                Vul je gegevens in om <span className="font-semibold">{selectedWhitepaper.titel}</span> te downloaden.
-              </p>
-            </div>
-
-            {/* Error Message */}
-            {modalError && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-800 text-sm">
-                {modalError}
-              </div>
-            )}
-
-            {/* Form */}
-            <form onSubmit={handleModalSubmit}>
-              {/* Naam */}
-              <div className="mb-4">
-                <label htmlFor="modal-naam" className="block text-sm font-semibold text-gray-700 mb-2">
-                  Naam *
-                </label>
-                <input
-                  type="text"
-                  id="modal-naam"
-                  value={naam}
-                  onChange={(e) => setNaam(e.target.value)}
-                  required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-[#1B3F6E] focus:ring-2 focus:ring-[#1B3F6E]/20"
-                  placeholder="Je naam"
-                />
-              </div>
-
-              {/* Email */}
-              <div className="mb-6">
-                <label htmlFor="modal-email" className="block text-sm font-semibold text-gray-700 mb-2">
-                  E-mailadres *
-                </label>
-                <input
-                  type="email"
-                  id="modal-email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-[#1B3F6E] focus:ring-2 focus:ring-[#1B3F6E]/20"
-                  placeholder="je.email@voorbeeld.nl"
-                />
-              </div>
-
-              {/* Buttons */}
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={handleCloseModal}
-                  className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  Annuleren
-                </button>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="flex-1 px-6 py-3 bg-[#1B3F6E] text-white font-semibold rounded-lg hover:bg-[#153255] transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
-                >
-                  {submitting ? "Bezig..." : "Download"}
-                </button>
-              </div>
-
-              {/* Privacy Note */}
-              <p className="mt-4 text-xs text-gray-500 text-center">
-                We gebruiken je gegevens alleen om je op de hoogte te houden van nieuwe whitepapers.
-              </p>
-            </form>
-          </div>
-        </div>
+        <EmailGate whitepaper={selectedWhitepaper} onClose={handleCloseModal} />
       )}
 
       {/* Footer */}
