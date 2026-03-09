@@ -76,13 +76,13 @@ Thought leadership platform voor vakprofessionals. Eerste manifest: accountancy.
 - ✅ Homepage met hero sectie
 - ✅ Whitepapers overzichtspagina
 - ✅ PDF upload via admin pagina (`/admin/whitepaper-toevoegen`)
-- ✅ Download knop per whitepaper
+- ✅ Download knop per whitepaper (met e-mail gate via `app/components/EmailGate.tsx`)
 - ✅ Supabase database en storage gekoppeld
 - ✅ Code op GitHub
 
 ## Openstaande taken
 
-- [ ]  E-mail gate bij download (naam + e-mail vragen, opslaan in downloads tabel)
+- ✅  E-mail gate bij download (naam + e-mail vragen, opslaan in downloads tabel)
 - [ ]  Auteurspagina overzicht (`/auteurs`)
 - [ ]  Auteursprofiel individueel (`/auteurs/[naam]`)
 - [ ]  Over pagina (`/over`)
